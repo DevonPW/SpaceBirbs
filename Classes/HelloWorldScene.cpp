@@ -131,15 +131,15 @@ void HelloWorld::updateMouseInputs()
 	if (INPUTS->getMouseButton(MouseButton::BUTTON_LEFT))
 	{
 		angle++;
-		radius = 5;
-		Vec2 temp;
-		temp = INPUTS->getMousePosition();
-		//bird1->setPosition();
-		bird1->setPosition(INPUTS->getMousePosition());
-		//Vec2 temp;
-		//temp = INPUTS->getMousePosition();
-		//std::cout << temp.x << "," << temp.y << std::endl;
-		////Replace with pull back from slingshot 
+		radius = 200.0f;
+		if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
+			Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
+			bird1->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
+			//bird1->setPosition(slingshotBack->getPosition());
+		}
+		else {
+			bird1->setPosition(INPUTS->getMousePosition());
+		}
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
