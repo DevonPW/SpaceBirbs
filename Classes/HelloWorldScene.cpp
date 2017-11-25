@@ -5,8 +5,6 @@
 
 USING_NS_CC;
 
-
-
 Scene* HelloWorld::createScene()
 {
 	// 'scene' is an autorelease object
@@ -61,20 +59,9 @@ bool HelloWorld::init()
 	//Draw objects like background,planets,slingshot, etc 
 	DrawWorld();
 
-	/*bird1 = Sprite::create("UA/Birds/spr_Bird.png");
-	bird1->setScale(0.25f);
-	bird1->setAnchorPoint(Vec2(0.5f, 0.5f));
-	bird1->setPosition(Vec2(200, 150));
-	
-	PhysicsBody* bird_body = PhysicsBody::createCircle(bird1->getContentSize().width / 2.0f);
-	bird_body->setDynamic(true);
-	bird1->setPhysicsBody(bird_body);*
-
-	this->addChild(bird1);*/
-
-	 bird1 = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
-	bird1->initialize();
-	this->addChild(bird1);
+	birds[0] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[0]->initialize();
+	this->addChild(birds[0]);
 
 	//Create the Pig!
 	pig1 = Sprite::create("UA/Enemies/spr_Pig.png");
@@ -84,6 +71,7 @@ bool HelloWorld::init()
 	pig1->setPosition(Vec2(1200, 500));
 	this->addChild(pig1);
 
+	currentBird = birds[0];
 
 	//Allow for the update() function to be called by cocos
 	this->scheduleUpdate();
@@ -140,18 +128,17 @@ void HelloWorld::updateMouseInputs()
 		radius = 200.0f;
 		if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
 			Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
-			bird1->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
-			//bird1->setPosition(slingshotBack->getPosition());
+			currentBird->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
 		}
 		else {
-			bird1->setPosition(INPUTS->getMousePosition());
+			currentBird->setPosition(INPUTS->getMousePosition());
 		}
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
 		//use slingshot position plus where mouse is released to figure out velocity
-		bird1->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - INPUTS->getMousePosition()) * 5.0f);
+		currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - INPUTS->getMousePosition()) * 5.0f);
 	}
 }
 
@@ -176,8 +163,8 @@ void HelloWorld::updateKeyboardInputs()
 }
 	if (INPUTS->getKeyPress(KeyCode::KEY_G))
 	{
-		bird1->setPosition(200, 150);
-		bird1->getPhysicsBody()->setVelocity(Vec2(0, 0));
+		currentBird->setPosition(200, 150);
+		currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
 	}
 	else if (INPUTS->getKeyRelease(KeyCode::KEY_G))
 	{
@@ -204,10 +191,6 @@ void HelloWorld::CheckCollision()
 {
 	
 }
-
-
-
-
 
 void HelloWorld::DrawWorld()
 {

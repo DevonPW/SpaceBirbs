@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <ui\UITextField.h>
-#include "DisplayHandler.h"
 
 using namespace cocos2d;
 
@@ -73,11 +72,12 @@ private:
 	//birdheld???
 	//birdlaunched??
 
-	//Bird* currentBird;
+	Bird* currentBird;
+	Bird* birds[3];
 
 	//Sprite* spritename;
 	//Birds
-	Bird* bird1;
+	//Bird* bird1;
 
 	//Slingshot
 	Sprite* slingshotBack;
@@ -101,12 +101,3 @@ private:
 
 	static Scene* sceneHandle;
 };
-
-/*class Bird : public Sprite {
-	Bird::Bird();
-
-	Bird::~Bird();
-
-public:
-	void initialize();
-};*/
