@@ -4,8 +4,30 @@
 #include <iostream>
 #include <fstream>
 #include <ui\UITextField.h>
+#include "DisplayHandler.h"
 
 using namespace cocos2d;
+
+class Bird : public Sprite {
+	Bird::Bird() {
+	}
+
+	Bird::~Bird() {
+
+	}
+
+public:
+	void initialize() {
+		setScale(0.25f);
+		setAnchorPoint(Vec2(0.5f, 0.5f));
+		setPosition(Vec2(200, 150));
+
+		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
+		bird_body->setDynamic(true);
+		setPhysicsBody(bird_body);
+	}
+};
+
 class HelloWorld : public cocos2d::Scene
 {
 public:
@@ -51,11 +73,11 @@ private:
 	//birdheld???
 	//birdlaunched??
 
-	Sprite* currentBird;
+	//Bird* currentBird;
 
 	//Sprite* spritename;
 	//Birds
-	Sprite* bird1;
+	Bird* bird1;
 
 	//Slingshot
 	Sprite* slingshotBack;
@@ -80,4 +102,11 @@ private:
 	static Scene* sceneHandle;
 };
 
+/*class Bird : public Sprite {
+	Bird::Bird();
 
+	Bird::~Bird();
+
+public:
+	void initialize();
+};*/

@@ -5,6 +5,8 @@
 
 USING_NS_CC;
 
+
+
 Scene* HelloWorld::createScene()
 {
 	// 'scene' is an autorelease object
@@ -59,15 +61,19 @@ bool HelloWorld::init()
 	//Draw objects like background,planets,slingshot, etc 
 	DrawWorld();
 
-	bird1 = Sprite::create("UA/Birds/spr_Bird.png");
+	/*bird1 = Sprite::create("UA/Birds/spr_Bird.png");
 	bird1->setScale(0.25f);
 	bird1->setAnchorPoint(Vec2(0.5f, 0.5f));
 	bird1->setPosition(Vec2(200, 150));
 	
 	PhysicsBody* bird_body = PhysicsBody::createCircle(bird1->getContentSize().width / 2.0f);
 	bird_body->setDynamic(true);
-	bird1->setPhysicsBody(bird_body);
+	bird1->setPhysicsBody(bird_body);*
 
+	this->addChild(bird1);*/
+
+	 bird1 = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	bird1->initialize();
 	this->addChild(bird1);
 
 	//Create the Pig!
