@@ -29,7 +29,7 @@ void HelloWorld::onExit()
 
 void HelloWorld::onEnter()
 {
-	DISPLAY->createDebugConsole(true);
+	//DISPLAY->createDebugConsole(true);
 	std::cout << "THE CONSOLE IS NOW OPEN" << std::endl;
 	Scene::onEnter();
 }
@@ -135,7 +135,7 @@ void HelloWorld::updateMouseInputs()
 		Vec2 temp;
 		temp = INPUTS->getMousePosition();
 		//bird1->setPosition();
-		//bird1->setPosition(INPUTS->getMousePosition());
+		bird1->setPosition(INPUTS->getMousePosition());
 		//Vec2 temp;
 		//temp = INPUTS->getMousePosition();
 		//std::cout << temp.x << "," << temp.y << std::endl;

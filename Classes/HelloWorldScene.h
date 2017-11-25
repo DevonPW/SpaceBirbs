@@ -51,6 +51,8 @@ private:
 	//birdheld???
 	//birdlaunched??
 
+	Sprite* currentBird;
+
 	//Sprite* spritename;
 	//Birds
 	Sprite* bird1;
