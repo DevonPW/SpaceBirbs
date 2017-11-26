@@ -40,7 +40,7 @@ public:
 
 		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 3.0f);
 		bird_body->setDynamic(true);
-		bird_body->setCollisionBitmask(0x00);
+		bird_body->setEnabled(false);
 		bird_body->setMass(1);
 		setPhysicsBody(bird_body);
 

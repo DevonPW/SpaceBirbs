@@ -61,18 +61,21 @@ bool HelloWorld::init()
 	DrawWorld();
 
 	birds[0] = Bird::create("UA/Birds/spr_Bird.png");
-	birds[0]->startPos = Vec2(100, 150);
+	birds[0]->startPos = Vec2(250, 150);
 	birds[0]->initialize();
+	birds[0]->type = Bird::RED;
 	this->addChild(birds[0]);
 
 	birds[1] = Bird::create("UA/Birds/spr_Bird.png");
 	birds[1]->startPos = Vec2(150, 150);
 	birds[1]->initialize();
+	birds[1]->type = Bird::YELLOW;
 	this->addChild(birds[1]);
 
 	birds[2] = Bird::create("UA/Birds/spr_Bird.png");
 	birds[2]->startPos = Vec2(250, 100);
 	birds[2]->initialize();
+	birds[2]->type = Bird::BLUE;
 	this->addChild(birds[2]);
 
 	//Create the Pig!
@@ -153,6 +156,7 @@ void HelloWorld::updateMouseInputs()
 			}
 		}
 		else if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
+			currentBird->getPhysicsBody()->setEnabled(true);
 			currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
 
 			if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
@@ -172,7 +176,6 @@ void HelloWorld::updateMouseInputs()
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
 		if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
-
 			Vec2 shotForce = (slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f;
 			float rot = currentBird->getRotation();
 			shotForce = shotForce.rotateByAngle(slingshotBack->getPosition() - currentBird->getPosition(), CC_DEGREES_TO_RADIANS(rot));
@@ -186,6 +189,7 @@ void HelloWorld::updateMouseInputs()
 						if (currentBird != NULL && currentBird->state == Bird::LOADED) {
 							currentBird->state = Bird::WAITING;
 							currentBird->setPosition(currentBird->startPos);
+							currentBird->getPhysicsBody()->setEnabled(false);
 						}
 						birds[i]->state = Bird::LOADED;
 						currentBird = birds[i];
@@ -261,6 +265,9 @@ void HelloWorld::DrawWorld()
 	planetSmall->setPosition(200, 100);
 	planetSmall->setScale(0.30f);
 	planetSmall->setAnchorPoint(Vec2(0.5f, 0.5f));
+	PhysicsBody* planet_body = PhysicsBody::createCircle(planetSmall->getContentSize().width / 2.0f);
+	planet_body->setDynamic(false);
+	planetSmall->setPhysicsBody(planet_body);
 	this->addChild(planetSmall);
 
 	//Create Big Planet for the pigs!
@@ -268,7 +275,7 @@ void HelloWorld::DrawWorld()
 	planetBig->setPosition(1000, 500);
 	planetBig->setScale(0.75f);
 	planetBig->setAnchorPoint(Vec2(0.5f, 0.5f));
-	PhysicsBody* planet_body = PhysicsBody::createCircle(planetBig->getContentSize().width / 2.0f);
+	planet_body = PhysicsBody::createCircle(planetBig->getContentSize().width / 2.0f);
 	planet_body->setDynamic(false);
 	planetBig->setPhysicsBody(planet_body);
 	this->addChild(planetBig);
