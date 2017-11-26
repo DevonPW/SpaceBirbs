@@ -58,6 +58,8 @@ public:
 			setRotation(birdAngle);
 
 			Vec2 forceVector = birdDisplacement.getNormalized() * -50.0f;
+			float rot = getRotation();
+			forceVector = forceVector.rotateByAngle(birdDisplacement, CC_DEGREES_TO_RADIANS(rot));
 
 			getPhysicsBody()->applyForce(forceVector);
 		}
