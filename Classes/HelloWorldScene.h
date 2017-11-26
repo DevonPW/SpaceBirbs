@@ -31,9 +31,12 @@ public:
 	};
 	State state;
 
+	Vec2 startPos = Vec2(0,0);
+
 	void initialize() {
 		setScale(0.25f);
 		setAnchorPoint(Vec2(0.5f, 0.5f));
+		setPosition(startPos);
 
 		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
 		bird_body->setDynamic(false);
@@ -54,6 +57,17 @@ public:
 		}
 	}
 
+	static Bird* create(const std::string& filename)
+	{
+		Bird *sprite = new (std::nothrow) Bird();
+		if (sprite && sprite->initWithFile(filename))
+		{
+			sprite->autorelease();
+			return sprite;
+		}
+		CC_SAFE_DELETE(sprite);
+		return nullptr;
+	}
 };
 
 class HelloWorld : public cocos2d::Scene
@@ -88,10 +102,6 @@ public:
 	float radius;
 	float angle;
 
-
-	//Remove or it will cause problems
-	float rotfun;
-	//
 private:
 
 	//Engine
@@ -102,7 +112,7 @@ private:
 	//birdlaunched??
 
 	//Birds
-	Bird* currentBird;
+	Bird* currentBird = 0;
 	Bird* birds[3];
 
 	//Slingshot

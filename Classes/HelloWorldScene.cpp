@@ -60,19 +60,19 @@ bool HelloWorld::init()
 	//Draw objects like background,planets,slingshot, etc 
 	DrawWorld();
 
-	birds[0] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[0] = Bird::create("UA/Birds/spr_Bird.png");
+	birds[0]->startPos = Vec2(100, 150);
 	birds[0]->initialize();
-	birds[0]->setPosition(slingshotBack->getPosition());
 	this->addChild(birds[0]);
 
-	birds[1] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[1] = Bird::create("UA/Birds/spr_Bird.png");
+	birds[1]->startPos = Vec2(150, 150);
 	birds[1]->initialize();
-	birds[1]->setPosition(Vec2(150, 150));
 	this->addChild(birds[1]);
 
-	birds[2] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[2] = Bird::create("UA/Birds/spr_Bird.png");
+	birds[2]->startPos = Vec2(250, 100);
 	birds[2]->initialize();
-	birds[2]->setPosition(250, 100);
 	this->addChild(birds[2]);
 
 	//Create the Pig!
@@ -83,8 +83,8 @@ bool HelloWorld::init()
 	pig1->setPosition(Vec2(1200, 500));
 	this->addChild(pig1);
 
-	currentBird = birds[0];
-	currentBird->state = Bird::LOADED;
+	//currentBird = birds[0];
+	//currentBird->state = Bird::LOADED;
 
 	/*printAngle = Label::createWithTTF(std::to_string(birdAngle), "Fonts/arial.ttf", 20.0f);
 	printAngle->setAnchorPoint(Vec2(0.0f, 1.0f));
@@ -99,7 +99,6 @@ bool HelloWorld::init()
 
 void HelloWorld::update(float deltaTime)
 {
-	//The main update loop!!
 	for (int i = 0; i < 3; i++) {
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
@@ -113,15 +112,11 @@ void HelloWorld::update(float deltaTime)
 		}
 	}
 
-	if (currentBird->state == Bird::LAUNCHED) {
+	if (currentBird != NULL && currentBird->state == Bird::LAUNCHED) {
 		currentBird->getPhysicsBody()->setDynamic(true);
 	}
 
-	//how much force to add
-
-	//void UpdateLocations based on gravity??
 	physicsWorld->setGravity(Vec2(0.0f, 0.0f));
-	//Update based on gravity???
 	UpdatePositions(deltaTime);
 
 	//Update rotations
@@ -150,10 +145,15 @@ void HelloWorld::updateMouseInputs()
 	//If mouse is held
 	if (INPUTS->getMouseButton(MouseButton::BUTTON_LEFT))
 	{
-		if (currentBird->state == Bird::LOADED || currentBird->state == Bird::GRABBED) {
-			currentBird->state = Bird::GRABBED;
-			radius = 200.0f;
+		radius = 200.0f;
+		if (currentBird != NULL && currentBird->state == Bird::LOADED) {
+			if (INPUTS->getMousePosition().distance(currentBird->getPosition()) <= 20) {
+				currentBird->state = Bird::GRABBED;
+			}
+		}
+		else if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
 			currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
+
 			if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
 				Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
 				currentBird->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
@@ -161,19 +161,34 @@ void HelloWorld::updateMouseInputs()
 			else {
 				currentBird->setPosition(INPUTS->getMousePosition());
 			}
-
 			//printAngle->setString(std::to_string(birdAngle));
 		}
-		else if (currentBird->state == Bird::LAUNCHED) {
+		else if (currentBird != NULL && currentBird->state == Bird::LAUNCHED) {
 
 		}
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
-		if (currentBird->state == Bird::GRABBED) {
+		if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
 			currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f);
 			currentBird->state = Bird::LAUNCHED;
+		}
+		else {
+			for (int i = 0; i < 3; i++) {
+				if (INPUTS->getMousePosition().distance(birds[i]->getPosition()) <= 20) {
+					if (birds[i]->state == Bird::WAITING) {
+						if (currentBird != NULL && currentBird->state == Bird::LOADED) {
+							currentBird->state = Bird::WAITING;
+							currentBird->setPosition(currentBird->startPos);
+						}
+						birds[i]->state = Bird::LOADED;
+						currentBird = birds[i];
+						break;
+					}
+				}
+
+			}
 		}
 	}
 }
