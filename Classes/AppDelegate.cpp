@@ -101,7 +101,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
 	Director* director = Director::getInstance();
 
-	DISPLAY->init(1200.0f, 900.0f, "Hocus Pocus", false);
+	DISPLAY->init(1800.0f, 1000.0f, "Hocus Pocus", false);
 
 	Scene* scene = HelloWorld::createScene();
 	director->runWithScene(scene);

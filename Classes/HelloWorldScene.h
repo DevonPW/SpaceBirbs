@@ -19,7 +19,8 @@ public:
 	enum Type {
 		RED,
 		YELLOW,
-		BLUE
+		BLUE,
+		PIG//pigs are birds
 	};
 	Type type;
 	enum State {
@@ -27,6 +28,8 @@ public:
 		LOADED,
 		GRABBED,
 		LAUNCHED,
+		ORBITING,
+		SPINNING,
 		DEAD
 	};
 	State state;
@@ -34,34 +37,86 @@ public:
 	Vec2 startPos = Vec2(0,0);
 
 	void initialize() {
-		setScale(0.25f);
+		setScale(0.35f);
 		setAnchorPoint(Vec2(0.5f, 0.5f));
 		setPosition(startPos);
 
-		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 3.0f);
-		bird_body->setDynamic(true);
-		bird_body->setEnabled(false);
-		bird_body->setMass(1);
+		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
+		
+		bird_body->setGravityEnable(false);
+		if (type == PIG) {
+			bird_body->setMass(100);
+			bird_body->setDynamic(true);
+			bird_body->setEnabled(false);
+		}
+		else {
+			bird_body->setMass(100);
+			bird_body->setDynamic(true);
+			bird_body->setEnabled(false);
+		}
 		setPhysicsBody(bird_body);
 
 		state = WAITING;
 	}
 
-	void orbit(Sprite* orbitBody, int modAngle = 0.0f) {
-		if (orbitBody != NULL) {
-			Vec2 birdDisplacement = (getPosition() - orbitBody->getPosition());
+	void update(float deltatime) {
+		Sprite::update(deltatime);
+	}
+
+	Sprite* orbitBody1;
+
+	void orbit(Sprite* orbitBody, float modAngle = 0.0f, float radius = 1000.0f) {
+		if (state != ORBITING){
+			orbitBody1 = orbitBody;
+		}
+		if (orbitBody1 != NULL) {
+			Vec2 birdDisplacement = (getPosition() - orbitBody1->getPosition());
 			float birdAngle = -MATH_RAD_TO_DEG(birdDisplacement.angle(birdDisplacement, Vec2(1, 0))) + 90;
-			if (getPosition().y < orbitBody->getPosition().y) {
+			if (getPosition().y < orbitBody1->getPosition().y) {
 				birdAngle = -180 - birdAngle;
 			}
 			birdAngle += modAngle;
-			setRotation(birdAngle);
+			float targetRotation = birdAngle;
 
-			Vec2 forceVector = birdDisplacement.getNormalized() * -50.0f;
-			float rot = getRotation();
-			forceVector = forceVector.rotateByAngle(birdDisplacement, CC_DEGREES_TO_RADIANS(rot));
+			float rotationVelocity = 2.0f;
+
+			if (state == LAUNCHED || state == ORBITING || state == SPINNING) {
+				if (getRotation() < targetRotation) {
+					float rot = getRotation() + rotationVelocity;
+					if (rot > targetRotation) {
+						rot = targetRotation;
+					}
+					setRotation(rot);
+				}
+				else if (getRotation() > targetRotation) {
+					float rot = getRotation() - rotationVelocity;
+					if (rot < targetRotation) {
+						rot = targetRotation;
+					}
+					setRotation(rot);
+				}
+				else {
+					setRotation(targetRotation);
+				}
+			}
+			else {
+				setRotation(targetRotation);
+			}
+
+			if (state == SPINNING) {
+				setRotation(getRotation() + 15);
+			}
+
+			Vec2 forceVector = birdDisplacement.getNormalized() * -20000.0f;
+
+			if (state == LAUNCHED) {
+				forceVector *= (birdDisplacement.getLength()) / radius;
+			}
+
+			forceVector = forceVector.rotateByAngle(birdDisplacement, CC_DEGREES_TO_RADIANS(getRotation()));
 
 			getPhysicsBody()->applyForce(forceVector);
+			
 		}
 	}
 
@@ -76,6 +131,16 @@ public:
 		CC_SAFE_DELETE(sprite);
 		return nullptr;
 	}
+
+	bool checkCollision(Sprite* object) {
+		if (getPosition().distance(object->getPosition()) <= (object->getContentSize().width / 2.0f * object->getScale()) + (getContentSize().width / 2.0f * object->getScale())) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
 };
 
 class HelloWorld : public cocos2d::Scene
@@ -115,9 +180,7 @@ private:
 	//Engine
 	Director* director;
 
-	//Event Listeners
-	//birdheld???
-	//birdlaunched??
+	Sprite* cursor;
 
 	//Birds
 	Bird* currentBird = 0;
@@ -128,6 +191,7 @@ private:
 	Sprite* slingshotFront;
 
 	//Pigs
+	Bird* pigs[4];
 	Sprite* pig1;
 	
 	//Background

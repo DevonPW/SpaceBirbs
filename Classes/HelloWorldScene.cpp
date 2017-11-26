@@ -60,34 +60,54 @@ bool HelloWorld::init()
 	//Draw objects like background,planets,slingshot, etc 
 	DrawWorld();
 
+	cursor = Sprite::create("UA/Birds/spr_Bird.png");
+	cursor->setScale(0.1f);
+	cursor->setAnchorPoint(Vec2(0.5f, 0.5f));
+	this->addChild(cursor);
+
 	birds[0] = Bird::create("UA/Birds/spr_Bird.png");
-	birds[0]->startPos = Vec2(250, 150);
-	birds[0]->initialize();
+	birds[0]->startPos = planetSmall->getPosition() + Vec2(66, 66);
 	birds[0]->type = Bird::RED;
+	birds[0]->initialize();
 	this->addChild(birds[0]);
 
-	birds[1] = Bird::create("UA/Birds/spr_Bird.png");
-	birds[1]->startPos = Vec2(150, 150);
-	birds[1]->initialize();
+	birds[1] = Bird::create("UA/Birds/spr_BirdYellow.png");
+	birds[1]->startPos = planetSmall->getPosition() + Vec2(-66, 66);
 	birds[1]->type = Bird::YELLOW;
+	birds[1]->initialize();
 	this->addChild(birds[1]);
 
-	birds[2] = Bird::create("UA/Birds/spr_Bird.png");
-	birds[2]->startPos = Vec2(250, 100);
-	birds[2]->initialize();
+	birds[2] = Bird::create("UA/Birds/spr_BirdBlue.png");
+	birds[2]->startPos = planetSmall->getPosition() + Vec2(-95, 0);
 	birds[2]->type = Bird::BLUE;
+	birds[2]->initialize();
 	this->addChild(birds[2]);
 
-	//Create the Pig!
-	pig1 = Sprite::create("UA/Enemies/spr_Pig.png");
-	pig1->setScale(0.25f);
-	pig1->setAnchorPoint(Vec2(0.5f, 0.8f));
-	pig1->setRotation(90);
-	pig1->setPosition(Vec2(1200, 500));
-	this->addChild(pig1);
+	//Create the Pigs
 
-	//currentBird = birds[0];
-	//currentBird->state = Bird::LOADED;
+	pigs[0] = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs[0]->startPos = (planetBig->getPosition() + Vec2(148, 148));
+	pigs[0]->type = Bird::PIG;
+	pigs[0]->initialize();
+	this->addChild(pigs[0]);
+
+	pigs[1] = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs[1]->startPos = (planetBig->getPosition() + Vec2(-148, 148));
+	pigs[1]->type = Bird::PIG;
+	pigs[1]->initialize();
+	this->addChild(pigs[1]);
+
+	pigs[2] = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs[2]->startPos = (planetBig->getPosition() + Vec2(-148, -148));
+	pigs[2]->type = Bird::PIG;
+	pigs[2]->initialize();
+	this->addChild(pigs[2]);
+
+	pigs[3] = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs[3]->startPos = (planetBig->getPosition() + Vec2(148, -148));
+	pigs[3]->type = Bird::PIG;
+	pigs[3]->initialize();
+	this->addChild(pigs[3]);
 
 	/*printAngle = Label::createWithTTF(std::to_string(birdAngle), "Fonts/arial.ttf", 20.0f);
 	printAngle->setAnchorPoint(Vec2(0.0f, 1.0f));
@@ -102,21 +122,29 @@ bool HelloWorld::init()
 
 void HelloWorld::update(float deltaTime)
 {
+	cursor->setPosition(INPUTS->getMousePosition());
+
 	for (int i = 0; i < 3; i++) {
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
 		}
-		else if (birds[i]->state == Bird::LOADED) {
-			birds[i]->setRotation(0);
-			birds[i]->setPosition(slingshotBack->getPosition());
-		}
-		else if (birds[i]->state == Bird::GRABBED) {
-			birds[i]->orbit(slingshotBack, 90);
-		}
 	}
-
-	if (currentBird != NULL && currentBird->state == Bird::LAUNCHED) {
-		currentBird->getPhysicsBody()->setDynamic(true);
+	if (currentBird != NULL) {
+		if (currentBird->state == Bird::LOADED) {
+			currentBird->setRotation(0);
+			currentBird->setPosition(slingshotBack->getPosition());
+		}
+		else if (currentBird->state == Bird::GRABBED) {
+			currentBird->orbit(slingshotBack, 90);
+		}
+		else if (currentBird->state == Bird::ORBITING) {
+			currentBird->orbit(cursor);
+		}
+		else if (currentBird->state == Bird::SPINNING) {
+			if (currentBird->orbitBody1 == NULL) {
+				currentBird->setRotation(currentBird->getRotation() + 15);
+			}
+		}
 	}
 
 	physicsWorld->setGravity(Vec2(0.0f, 0.0f));
@@ -124,8 +152,6 @@ void HelloWorld::update(float deltaTime)
 
 	//Update rotations
 	UpdateRot(deltaTime);
-
-	//Did I hit something? 
 	CheckCollision();
 
 	//Check for Keyboard & Mouse Input DO NOT REMOVE
@@ -150,7 +176,7 @@ void HelloWorld::updateMouseInputs()
 	{
 		radius = 200.0f;
 		if (currentBird != NULL && currentBird->state == Bird::LOADED) {
-			if (INPUTS->getMousePosition().distance(currentBird->getPosition()) <= 20) {
+			if (INPUTS->getMousePosition().distance(currentBird->getPosition()) <= currentBird->getContentSize().width / 2.0f * currentBird->getScale()) {
 				currentBird->state = Bird::GRABBED;
 				currentBird->getPhysicsBody()->setCollisionBitmask(0x01);
 			}
@@ -169,14 +195,26 @@ void HelloWorld::updateMouseInputs()
 			//printAngle->setString(std::to_string(birdAngle));
 		}
 		else if (currentBird != NULL && currentBird->state == Bird::LAUNCHED) {
-
+			if (currentBird->type == Bird::YELLOW) {
+				currentBird->state = Bird::SPINNING;
+			}
+			else if (currentBird->type == Bird::BLUE) {
+				currentBird->state = Bird::ORBITING;
+				currentBird->orbitBody1 = cursor;
+			}
 		}
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
+		if (currentBird != NULL && currentBird->state == Bird::ORBITING) {
+			currentBird->state = Bird::LAUNCHED;
+		}
+		if (currentBird != NULL && currentBird->state == Bird::SPINNING) {
+			currentBird->state = Bird::LAUNCHED;
+		}
 		if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
-			Vec2 shotForce = (slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f;
+			Vec2 shotForce = (slingshotBack->getPosition() - currentBird->getPosition()) * 500.0f;
 			float rot = currentBird->getRotation();
 			shotForce = shotForce.rotateByAngle(slingshotBack->getPosition() - currentBird->getPosition(), CC_DEGREES_TO_RADIANS(rot));
 			currentBird->getPhysicsBody()->applyImpulse(shotForce);
@@ -184,7 +222,7 @@ void HelloWorld::updateMouseInputs()
 		}
 		else {
 			for (int i = 0; i < 3; i++) {
-				if (INPUTS->getMousePosition().distance(birds[i]->getPosition()) <= 20) {
+				if (INPUTS->getMousePosition().distance(birds[i]->getPosition()) <= birds[i]->getContentSize().width / 2.0f * birds[i]->getScale()) {
 					if (birds[i]->state == Bird::WAITING) {
 						if (currentBird != NULL && currentBird->state == Bird::LOADED) {
 							currentBird->state = Bird::WAITING;
@@ -221,19 +259,12 @@ void HelloWorld::updateKeyboardInputs()
 	{
 
 }
-	if (INPUTS->getKeyPress(KeyCode::KEY_G))
+	if (INPUTS->getKeyPress(KeyCode::KEY_R))
 	{
 		currentBird->setPosition(currentBird->startPos);
 		currentBird->state = Bird::WAITING;
 		currentBird->getPhysicsBody()->setEnabled(false);
 		currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
-	}
-	else if (INPUTS->getKeyRelease(KeyCode::KEY_G))
-	{
-		//When the user releases the G key, we are resetting gravity to the proper value.
-		//This is where it is useful that we got the reference to the physics world in the create scene function
-		//IMPORTANT NOTE: You might remember gravity is defined as -9.81 m/s/s from physics. Cocos2D's physics engines work on a 10x scale. You can use -9.81 but your forces will have to be dialed down to compensate
-		
 	}
 
 }
@@ -251,7 +282,74 @@ void HelloWorld::UpdateRot(float dt)
 
 void HelloWorld::CheckCollision()
 {
-	
+	for (int i = 0; i < 3; i++) {
+		if (birds[i]->checkCollision(planetG) == true) {
+			birds[i]->orbit(planetBig, 0.0f, planetG->getContentSize().width / 2.0f * planetG->getScale());
+		}
+		//friction
+		if (birds[i]->checkCollision(planetBig) == true) {
+			birds[i]->getPhysicsBody()->setLinearDamping(0.001f);
+		}
+		else {
+			birds[i]->getPhysicsBody()->setLinearDamping(0.0f);
+		}
+
+		//screen wrapping
+		if (birds[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x) {
+			birds[i]->setPosition(Vec2(0, birds[i]->getPositionY()));
+		}
+		else if (birds[i]->getPosition().x <= 0.0f) {
+			birds[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x, birds[i]->getPositionY()));
+		}
+		if (birds[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y) {
+			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), 0));
+		}
+		else if (birds[i]->getPosition().y <= 0.0f) {
+			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y));
+		}
+		//collisions with pigs
+		for (int j = 0; j < 4; j++) {
+			if (pigs[j]->getPhysicsBody()->isEnabled() == false && birds[i]->checkCollision(pigs[j]) == true) {
+				pigs[j]->state = Bird::LAUNCHED;
+				pigs[j]->getPhysicsBody()->setEnabled(true);
+			}
+		}
+	}
+
+	for (int i = 0; i < 4; i++) {
+		if (pigs[i]->checkCollision(planetG) == true) {
+			pigs[i]->orbit(planetBig, 0.0f, planetG->getContentSize().width / 2.0f * planetG->getScale());
+		}
+		//friction
+		if (pigs[i]->checkCollision(planetBig) == true) {
+			pigs[i]->getPhysicsBody()->setLinearDamping(0.001f);
+		}
+		else {
+			pigs[i]->getPhysicsBody()->setLinearDamping(0.0f);
+		}
+
+		//screen wrapping
+		if (pigs[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x) {
+			pigs[i]->setPosition(Vec2(0, pigs[i]->getPositionY()));
+		}
+		else if (pigs[i]->getPosition().x <= 0.0f) {
+			pigs[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x, pigs[i]->getPositionY()));
+		}
+		if (pigs[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y) {
+			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), 0));
+		}
+		else if (pigs[i]->getPosition().y <= 0.0f) {
+			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y));
+		}
+
+		//collisions with pigs
+		for (int j = 0; j < 4; j++) {
+			if (pigs[j]->getPhysicsBody()->isEnabled() == false && pigs[i] != pigs[j] && pigs[i]->checkCollision(pigs[j]) == true) {
+				pigs[j]->state = Bird::LAUNCHED;
+				pigs[j]->getPhysicsBody()->setEnabled(true);
+			}
+		}
+	}
 }
 
 void HelloWorld::DrawWorld()
@@ -259,6 +357,7 @@ void HelloWorld::DrawWorld()
 	//Creating the background
 	background = Sprite::create("UA/Background/bg.jpg");
 	background->setAnchorPoint(Vec2(0.5f, 0.5f));
+	background->setScale(1.2f);
 	background->setPosition(director->getWinSizeInPixels().width / 2, director->getWinSizeInPixels().height / 2);
 	this->addChild(background, -100);
 
@@ -269,22 +368,23 @@ void HelloWorld::DrawWorld()
 	planetSmall->setAnchorPoint(Vec2(0.5f, 0.5f));
 	PhysicsBody* planet_body = PhysicsBody::createCircle(planetSmall->getContentSize().width / 2.0f);
 	planet_body->setDynamic(false);
+	planet_body->setEnabled(false);
 	planetSmall->setPhysicsBody(planet_body);
 	this->addChild(planetSmall);
 
 	//Create Big Planet for the pigs!
 	planetBig = Sprite::create("UA/Level/planet.png");
-	planetBig->setPosition(1000, 500);
+	planetBig->setPosition(1200, 500);
 	planetBig->setScale(0.75f);
 	planetBig->setAnchorPoint(Vec2(0.5f, 0.5f));
-	planet_body = PhysicsBody::createCircle(planetBig->getContentSize().width / 2.0f);
+	planet_body = PhysicsBody::createCircle(planetBig->getContentSize().width / 2.05f );
 	planet_body->setDynamic(false);
 	planetBig->setPhysicsBody(planet_body);
 	this->addChild(planetBig);
 	//Create Gravity Radius
 	planetG = Sprite::create("UA/Level/circ.png");
-	planetG->setPosition(1000, 500);
-	planetG->setScale(2.25f);
+	planetG->setPosition(1200, 500);
+	planetG->setScale(2.6f);
 	planetG->setAnchorPoint(Vec2(0.5f, 0.5f));
 	this->addChild(planetG, -1);
 
