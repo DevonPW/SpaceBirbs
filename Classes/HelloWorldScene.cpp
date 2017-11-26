@@ -172,7 +172,11 @@ void HelloWorld::updateMouseInputs()
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
 		if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
-			currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f);
+
+			Vec2 shotForce = (slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f;
+			float rot = currentBird->getRotation();
+			shotForce = shotForce.rotateByAngle(slingshotBack->getPosition() - currentBird->getPosition(), CC_DEGREES_TO_RADIANS(rot));
+			currentBird->getPhysicsBody()->applyImpulse(shotForce);
 			currentBird->state = Bird::LAUNCHED;
 		}
 		else {

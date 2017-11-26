@@ -38,9 +38,10 @@ public:
 		setAnchorPoint(Vec2(0.5f, 0.5f));
 		setPosition(startPos);
 
-		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
+		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 3.0f);
 		bird_body->setDynamic(true);
 		bird_body->setCollisionBitmask(0x00);
+		bird_body->setMass(1);
 		setPhysicsBody(bird_body);
 
 		state = WAITING;
@@ -55,6 +56,10 @@ public:
 			}
 			birdAngle += modAngle;
 			setRotation(birdAngle);
+
+			Vec2 forceVector = birdDisplacement.getNormalized() * -50.0f;
+
+			getPhysicsBody()->applyForce(forceVector);
 		}
 	}
 
