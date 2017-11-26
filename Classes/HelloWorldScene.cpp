@@ -149,6 +149,7 @@ void HelloWorld::updateMouseInputs()
 		if (currentBird != NULL && currentBird->state == Bird::LOADED) {
 			if (INPUTS->getMousePosition().distance(currentBird->getPosition()) <= 20) {
 				currentBird->state = Bird::GRABBED;
+				currentBird->getPhysicsBody()->setCollisionBitmask(0x01);
 			}
 		}
 		else if (currentBird != NULL && currentBird->state == Bird::GRABBED) {

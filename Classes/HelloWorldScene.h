@@ -39,7 +39,8 @@ public:
 		setPosition(startPos);
 
 		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
-		bird_body->setDynamic(false);
+		bird_body->setDynamic(true);
+		bird_body->setCollisionBitmask(0x00);
 		setPhysicsBody(bird_body);
 
 		state = WAITING;
