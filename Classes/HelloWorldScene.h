@@ -19,10 +19,9 @@ public:
 	void initialize() {
 		setScale(0.25f);
 		setAnchorPoint(Vec2(0.5f, 0.5f));
-		setPosition(Vec2(200, 150));
 
 		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
-		bird_body->setDynamic(true);
+		bird_body->setDynamic(false);
 		setPhysicsBody(bird_body);
 	}
 };
@@ -72,12 +71,9 @@ private:
 	//birdheld???
 	//birdlaunched??
 
+	//Birds
 	Bird* currentBird;
 	Bird* birds[3];
-
-	//Sprite* spritename;
-	//Birds
-	//Bird* bird1;
 
 	//Slingshot
 	Sprite* slingshotBack;
@@ -93,6 +89,8 @@ private:
 	Sprite* planetSmall;
 	Sprite* planetBig;
 	Sprite* planetG;
+
+	Label* printAngle;
 
 	//This scene's physics world
 	//Reference to the physics world used within the scene. Prevents having to call: director->getRunningScene()->getPhysicsWorld() every time we want to do something

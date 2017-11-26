@@ -59,9 +59,32 @@ bool HelloWorld::init()
 	//Draw objects like background,planets,slingshot, etc 
 	DrawWorld();
 
+	Vec2 planetBird;
+	float birdAngle;
+
 	birds[0] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
 	birds[0]->initialize();
+	birds[0]->setPosition(Vec2(250, 150));
+	planetBird = (birds[0]->getPosition() - planetSmall->getPosition());
+	birdAngle = MATH_RAD_TO_DEG(planetBird.angle(planetBird, Vec2(1, 0))) + 180;
+	birds[0]->setRotation(birdAngle);
 	this->addChild(birds[0]);
+
+	birds[1] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[1]->initialize();
+	birds[1]->setPosition(Vec2(150, 150));
+	planetBird = (birds[1]->getPosition() - planetSmall->getPosition());
+	birdAngle = MATH_RAD_TO_DEG(planetBird.angle(planetBird, Vec2(1,0))) + 180;
+	birds[1]->setRotation(birdAngle);
+	this->addChild(birds[1]);
+
+	birds[2] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
+	birds[2]->initialize();
+	birds[2]->setPosition(planetSmall->getPosition());
+	planetBird = (birds[2]->getPosition() - planetSmall->getPosition());
+	birdAngle = MATH_RAD_TO_DEG(planetBird.angle(planetBird, Vec2(1, 0)));
+	birds[2]->setRotation(birdAngle);
+	this->addChild(birds[2]);
 
 	//Create the Pig!
 	pig1 = Sprite::create("UA/Enemies/spr_Pig.png");
@@ -72,6 +95,11 @@ bool HelloWorld::init()
 	this->addChild(pig1);
 
 	currentBird = birds[0];
+
+	printAngle = Label::createWithTTF(std::to_string(birdAngle), "Fonts/arial.ttf", 20.0f);
+	printAngle->setAnchorPoint(Vec2(0.0f, 1.0f));
+	printAngle->setPosition(0.0f, DISPLAY->getWindowSize().height);
+	this->addChild(printAngle);
 
 	//Allow for the update() function to be called by cocos
 	this->scheduleUpdate();
@@ -126,6 +154,7 @@ void HelloWorld::updateMouseInputs()
 	{
 		angle++;
 		radius = 200.0f;
+		currentBird->getPhysicsBody()->setVelocity(Vec2(0,0));
 		if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
 			Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
 			currentBird->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
@@ -133,12 +162,16 @@ void HelloWorld::updateMouseInputs()
 		else {
 			currentBird->setPosition(INPUTS->getMousePosition());
 		}
+		Vec2 planetBird = (birds[0]->getPosition() - planetSmall->getPosition());
+		float birdAngle = MATH_RAD_TO_DEG(planetBird.angle(planetBird, Vec2(-1, 0)));
+		birds[0]->setRotation(birdAngle);
+		printAngle->setString(std::to_string(birdAngle));
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
 		//use slingshot position plus where mouse is released to figure out velocity
-		currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - INPUTS->getMousePosition()) * 5.0f);
+		currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f);
 	}
 }
 
