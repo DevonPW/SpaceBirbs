@@ -16,6 +16,20 @@ class Bird : public Sprite {
 	}
 
 public:
+	enum Type {
+		RED,
+		YELLOW,
+		BLUE
+	};
+	Type type;
+	enum State {
+		WAITING,
+		LOADED,
+		LAUNCHED,
+		DEAD
+	};
+	State state;
+
 	void initialize() {
 		setScale(0.25f);
 		setAnchorPoint(Vec2(0.5f, 0.5f));
@@ -23,7 +37,22 @@ public:
 		PhysicsBody* bird_body = PhysicsBody::createCircle(getContentSize().width / 2.0f);
 		bird_body->setDynamic(false);
 		setPhysicsBody(bird_body);
+
+		state = WAITING;
 	}
+
+	void orbit(Sprite* orbitBody, int modAngle = 0.0f) {
+		if (orbitBody != NULL) {
+			Vec2 birdDisplacement = (getPosition() - orbitBody->getPosition());
+			float birdAngle = -MATH_RAD_TO_DEG(birdDisplacement.angle(birdDisplacement, Vec2(1, 0))) + 90;
+			if (getPosition().y < orbitBody->getPosition().y) {
+				birdAngle = -180 - birdAngle;
+			}
+			birdAngle += modAngle;
+			setRotation(birdAngle);
+		}
+	}
+
 };
 
 class HelloWorld : public cocos2d::Scene
