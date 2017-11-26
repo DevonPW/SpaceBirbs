@@ -223,7 +223,9 @@ void HelloWorld::updateKeyboardInputs()
 }
 	if (INPUTS->getKeyPress(KeyCode::KEY_G))
 	{
-		currentBird->setPosition(200, 150);
+		currentBird->setPosition(currentBird->startPos);
+		currentBird->state = Bird::WAITING;
+		currentBird->getPhysicsBody()->setEnabled(false);
 		currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
 	}
 	else if (INPUTS->getKeyRelease(KeyCode::KEY_G))
