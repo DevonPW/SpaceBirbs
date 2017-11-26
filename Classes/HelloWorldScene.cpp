@@ -62,19 +62,17 @@ bool HelloWorld::init()
 
 	birds[0] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
 	birds[0]->initialize();
-	birds[0]->setPosition(Vec2(250, 150));
+	birds[0]->setPosition(slingshotBack->getPosition());
 	this->addChild(birds[0]);
 
 	birds[1] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
 	birds[1]->initialize();
 	birds[1]->setPosition(Vec2(150, 150));
-	//birds[1]->orbitBody = planetSmall;
 	this->addChild(birds[1]);
 
 	birds[2] = static_cast<Bird*>(Sprite::create("UA/Birds/spr_Bird.png"));
 	birds[2]->initialize();
-	birds[2]->setPosition(planetSmall->getPosition());
-	//birds[2]->orbitBody = planetSmall;
+	birds[2]->setPosition(250, 100);
 	this->addChild(birds[2]);
 
 	//Create the Pig!
@@ -102,22 +100,22 @@ bool HelloWorld::init()
 void HelloWorld::update(float deltaTime)
 {
 	//The main update loop!!
-
-	//if bird in slingshot?
 	for (int i = 0; i < 3; i++) {
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
 		}
 		else if (birds[i]->state == Bird::LOADED) {
-			birds[i]->orbit(slingshotBack,90);
+			birds[i]->setRotation(0);
+			birds[i]->setPosition(slingshotBack->getPosition());
 		}
-		else {
-			birds[i]->orbit(planetBig);
+		else if (birds[i]->state == Bird::GRABBED) {
+			birds[i]->orbit(slingshotBack, 90);
 		}
 	}
 
-
-	//if bird has launched??
+	if (currentBird->state == Bird::LAUNCHED) {
+		currentBird->getPhysicsBody()->setDynamic(true);
+	}
 
 	//how much force to add
 
@@ -146,36 +144,37 @@ void HelloWorld::updateInputs()
 
 void HelloWorld::updateMouseInputs()
 {
-	//If we click within a 50 pixel radius of the slingshot position, we're grabbing the bird. 
 	if (INPUTS->getMouseButtonPress(MouseButton::BUTTON_LEFT))
 	{
-		//get starting position to use as reference for figuring out power
-	
-		
 	}
 	//If mouse is held
 	if (INPUTS->getMouseButton(MouseButton::BUTTON_LEFT))
 	{
-		angle++;
-		radius = 200.0f;
-		currentBird->getPhysicsBody()->setVelocity(Vec2(0,0));
-		if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
-			Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
-			currentBird->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
-		}
-		else {
-			currentBird->setPosition(INPUTS->getMousePosition());
-		}
-		//currentBird->orbitBody = slingshotBack;
-		//currentBird->orbit(90.0f);
+		if (currentBird->state == Bird::LOADED || currentBird->state == Bird::GRABBED) {
+			currentBird->state = Bird::GRABBED;
+			radius = 200.0f;
+			currentBird->getPhysicsBody()->setVelocity(Vec2(0, 0));
+			if (INPUTS->getMousePosition().distance(slingshotBack->getPosition()) >= radius) {
+				Vec2 displacement = INPUTS->getMousePosition() - slingshotBack->getPosition();
+				currentBird->setPosition(slingshotBack->getPosition() + displacement.getNormalized() * radius);
+			}
+			else {
+				currentBird->setPosition(INPUTS->getMousePosition());
+			}
 
-		//printAngle->setString(std::to_string(birdAngle));
+			//printAngle->setString(std::to_string(birdAngle));
+		}
+		else if (currentBird->state == Bird::LAUNCHED) {
+
+		}
 	}
 	//If we let go of the left mouse button and we're holding a bird, let go and launch the bird!
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
-		//use slingshot position plus where mouse is released to figure out velocity
-		currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f);
+		if (currentBird->state == Bird::GRABBED) {
+			currentBird->getPhysicsBody()->setVelocity((slingshotBack->getPosition() - currentBird->getPosition()) * 5.0f);
+			currentBird->state = Bird::LAUNCHED;
+		}
 	}
 }
 
@@ -262,8 +261,8 @@ void HelloWorld::DrawWorld()
 
 	//Creating the slingshot
 	slingshotBack = Sprite::create("UA/Level/SlingshotBack.png");
-	slingshotBack->setPosition(225, 200);
-	slingshotBack->setAnchorPoint(Vec2(0.5f, 0.5f));
+	slingshotBack->setPosition(225, 240);
+	slingshotBack->setAnchorPoint(Vec2(0.5f, 0.8f));
 	slingshotBack->setScale(0.50f);
 	this->addChild(slingshotBack, 0);	//Adding the slingshot to the world, setting the layer to 0 so it's behind the bird.
 	slingshotFront = Sprite::create("UA/Level/SlingshotFront.png");

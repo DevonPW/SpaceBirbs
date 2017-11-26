@@ -25,6 +25,7 @@ public:
 	enum State {
 		WAITING,
 		LOADED,
+		GRABBED,
 		LAUNCHED,
 		DEAD
 	};
