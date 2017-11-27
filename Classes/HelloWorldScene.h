@@ -4,7 +4,9 @@
 #include <iostream>
 #include <fstream>
 #include <ui\UITextField.h>
+#include <vector>
 
+using std::vector;
 using namespace cocos2d;
 
 class Bird : public Sprite {
@@ -30,9 +32,11 @@ public:
 		LAUNCHED,
 		ORBITING,
 		SPINNING,
+		HIT,
 		DEAD
 	};
 	State state;
+	State lastState;
 
 	Vec2 startPos = Vec2(0,0);
 
@@ -80,7 +84,7 @@ public:
 
 			float rotationVelocity = 2.0f;
 
-			if (state == LAUNCHED || state == ORBITING || state == SPINNING) {
+			if (state == LAUNCHED || state == ORBITING || state == SPINNING || state == HIT) {
 				if (getRotation() < targetRotation) {
 					float rot = getRotation() + rotationVelocity;
 					if (rot > targetRotation) {
@@ -107,11 +111,11 @@ public:
 				setRotation(getRotation() + 15);
 			}
 
-			Vec2 forceVector = birdDisplacement.getNormalized() * -20000.0f;
+			Vec2 forceVector = birdDisplacement.getNormalized() * -40000.0f;
 
-			if (state == LAUNCHED) {
+			/*if (state == LAUNCHED || state == HIT) {
 				forceVector *= (birdDisplacement.getLength()) / radius;
-			}
+			}*/
 
 			forceVector = forceVector.rotateByAngle(birdDisplacement, CC_DEGREES_TO_RADIANS(getRotation()));
 
@@ -119,6 +123,9 @@ public:
 			
 		}
 	}
+
+	int deathTime = -1;
+	int toDead = 0;
 
 	static Bird* create(const std::string& filename)
 	{
@@ -184,7 +191,8 @@ private:
 
 	//Birds
 	Bird* currentBird = 0;
-	Bird* birds[3];
+	//Bird* birds[3];
+	vector<Bird*> birds;
 
 	//Slingshot
 	Sprite* slingshotBack;

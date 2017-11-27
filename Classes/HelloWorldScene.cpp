@@ -3,8 +3,13 @@
 #include "InputHandler.h"
 #include "DisplayHandler.h"
 #include <array>
+#include <ctime>
 
 USING_NS_CC;
+
+int currentTime() {
+	return clock() / (double)CLOCKS_PER_SEC * 1000;
+}
 
 Scene* HelloWorld::createScene()
 {
@@ -65,19 +70,22 @@ bool HelloWorld::init()
 	cursor->setAnchorPoint(Vec2(0.5f, 0.5f));
 	this->addChild(cursor);
 
-	birds[0] = Bird::create("UA/Birds/spr_Bird.png");
+	Bird* bird = Bird::create("UA/Birds/spr_Bird.png");
+	birds.push_back(bird);
 	birds[0]->startPos = planetSmall->getPosition() + Vec2(66, 66);
 	birds[0]->type = Bird::RED;
 	birds[0]->initialize();
 	this->addChild(birds[0]);
 
-	birds[1] = Bird::create("UA/Birds/spr_BirdYellow.png");
+	bird = Bird::create("UA/Birds/spr_BirdYellow.png");
+	birds.push_back(bird);
 	birds[1]->startPos = planetSmall->getPosition() + Vec2(-66, 66);
 	birds[1]->type = Bird::YELLOW;
 	birds[1]->initialize();
 	this->addChild(birds[1]);
 
-	birds[2] = Bird::create("UA/Birds/spr_BirdBlue.png");
+	bird = Bird::create("UA/Birds/spr_BirdBlue.png");
+	birds.push_back(bird);
 	birds[2]->startPos = planetSmall->getPosition() + Vec2(-95, 0);
 	birds[2]->type = Bird::BLUE;
 	birds[2]->initialize();
@@ -128,7 +136,40 @@ void HelloWorld::update(float deltaTime)
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
 		}
+		if (birds[i]->state == Bird::HIT) {
+			if (birds[i]->deathTime < 0) {
+				birds[i]->deathTime = currentTime() + 10000;
+			}
+			if (birds[i]->deathTime > 0 && currentTime() >= birds[i]->deathTime) {
+				birds[i]->state = Bird::DEAD;
+			}
+		}
+		if (birds[i]->state == Bird::DEAD) {
+			if (birds[i] == currentBird) {
+				currentBird = NULL;
+			}
+			this->removeChild(birds[i]);
+		}
 	}
+
+	for (int i = 0; i < 4; i++) {
+		if (pigs[i]->state == Bird::HIT) {
+			if (pigs[i]->deathTime < 0) {
+				pigs[i]->deathTime = currentTime() + 10000;
+			}
+			if (pigs[i]->deathTime > 0 && currentTime() >= pigs[i]->deathTime) {
+				pigs[i]->state = Bird::DEAD;
+			}
+			if (pigs[i]->state == Bird::DEAD) {
+				this->removeChild(pigs[i]);
+			}
+		}
+	}
+	
+	physicsWorld->setGravity(Vec2(0.0f, 0.0f));
+
+	CheckCollision();
+
 	if (currentBird != NULL) {
 		if (currentBird->state == Bird::LOADED) {
 			currentBird->setRotation(0);
@@ -147,12 +188,6 @@ void HelloWorld::update(float deltaTime)
 		}
 	}
 
-	physicsWorld->setGravity(Vec2(0.0f, 0.0f));
-	UpdatePositions(deltaTime);
-
-	//Update rotations
-	UpdateRot(deltaTime);
-	CheckCollision();
 
 	//Check for Keyboard & Mouse Input DO NOT REMOVE
 	updateInputs();
@@ -194,11 +229,13 @@ void HelloWorld::updateMouseInputs()
 			}
 			//printAngle->setString(std::to_string(birdAngle));
 		}
-		else if (currentBird != NULL && currentBird->state == Bird::LAUNCHED) {
+		else if (currentBird != NULL && (currentBird->state == Bird::LAUNCHED || currentBird->state == Bird::HIT)) {
 			if (currentBird->type == Bird::YELLOW) {
+				currentBird->lastState = currentBird->state;
 				currentBird->state = Bird::SPINNING;
 			}
 			else if (currentBird->type == Bird::BLUE) {
+				currentBird->lastState = currentBird->state;
 				currentBird->state = Bird::ORBITING;
 				currentBird->orbitBody1 = cursor;
 			}
@@ -208,10 +245,10 @@ void HelloWorld::updateMouseInputs()
 	if (INPUTS->getMouseButtonRelease(MouseButton::BUTTON_LEFT))
 	{
 		if (currentBird != NULL && currentBird->state == Bird::ORBITING) {
-			currentBird->state = Bird::LAUNCHED;
+			currentBird->state = currentBird->lastState;
 		}
 		if (currentBird != NULL && currentBird->state == Bird::SPINNING) {
-			currentBird->state = Bird::LAUNCHED;
+			currentBird->state = currentBird->lastState;
 		}
 		if (currentBird != NULL && currentBird->state == Bird::GRABBED) {
 			Vec2 shotForce = (slingshotBack->getPosition() - currentBird->getPosition()) * 500.0f;
@@ -269,25 +306,20 @@ void HelloWorld::updateKeyboardInputs()
 
 }
 
-void HelloWorld::UpdatePositions(float dt)
-{
-	
-
-}
-
-void HelloWorld::UpdateRot(float dt)
-{
-
-}
-
 void HelloWorld::CheckCollision()
 {
 	for (int i = 0; i < 3; i++) {
 		if (birds[i]->checkCollision(planetG) == true) {
 			birds[i]->orbit(planetBig, 0.0f, planetG->getContentSize().width / 2.0f * planetG->getScale());
 		}
+		else {
+			if (birds[i]->state != Bird::ORBITING) {
+				birds[i]->orbitBody1 = NULL;
+			}
+		}
 		//friction
 		if (birds[i]->checkCollision(planetBig) == true) {
+			birds[i]->state = Bird::HIT;
 			birds[i]->getPhysicsBody()->setLinearDamping(0.001f);
 		}
 		else {
@@ -295,23 +327,23 @@ void HelloWorld::CheckCollision()
 		}
 
 		//screen wrapping
-		if (birds[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x) {
-			birds[i]->setPosition(Vec2(0, birds[i]->getPositionY()));
+		if (birds[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x + 200) {
+			birds[i]->setPosition(Vec2(-200, birds[i]->getPositionY()));
 		}
-		else if (birds[i]->getPosition().x <= 0.0f) {
-			birds[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x, birds[i]->getPositionY()));
+		else if (birds[i]->getPosition().x <= -200) {
+			birds[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x + 200, birds[i]->getPositionY()));
 		}
-		if (birds[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y) {
-			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), 0));
+		if (birds[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y + 200) {
+			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), -200));
 		}
-		else if (birds[i]->getPosition().y <= 0.0f) {
-			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y));
+		else if (birds[i]->getPosition().y <= -200) {
+			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y + 200));
 		}
 		//collisions with pigs
 		for (int j = 0; j < 4; j++) {
 			if (pigs[j]->getPhysicsBody()->isEnabled() == false && birds[i]->checkCollision(pigs[j]) == true) {
-				pigs[j]->state = Bird::LAUNCHED;
 				pigs[j]->getPhysicsBody()->setEnabled(true);
+				pigs[j]->state = Bird::HIT;
 			}
 		}
 	}
@@ -329,24 +361,24 @@ void HelloWorld::CheckCollision()
 		}
 
 		//screen wrapping
-		if (pigs[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x) {
-			pigs[i]->setPosition(Vec2(0, pigs[i]->getPositionY()));
+		if (pigs[i]->getPosition().x >= DISPLAY->getWindowSizeAsVec2().x + 200) {
+			pigs[i]->setPosition(Vec2(-200, pigs[i]->getPositionY()));
 		}
-		else if (pigs[i]->getPosition().x <= 0.0f) {
-			pigs[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x, pigs[i]->getPositionY()));
+		else if (pigs[i]->getPosition().x <= -200) {
+			pigs[i]->setPosition(Vec2(DISPLAY->getWindowSizeAsVec2().x + 200, pigs[i]->getPositionY()));
 		}
-		if (pigs[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y) {
-			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), 0));
+		if (pigs[i]->getPosition().y >= DISPLAY->getWindowSizeAsVec2().y + 200) {
+			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), -200));
 		}
-		else if (pigs[i]->getPosition().y <= 0.0f) {
-			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y));
+		else if (pigs[i]->getPosition().y <= -200) {
+			pigs[i]->setPosition(Vec2(pigs[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y + 200));
 		}
 
 		//collisions with pigs
 		for (int j = 0; j < 4; j++) {
 			if (pigs[j]->getPhysicsBody()->isEnabled() == false && pigs[i] != pigs[j] && pigs[i]->checkCollision(pigs[j]) == true) {
-				pigs[j]->state = Bird::LAUNCHED;
 				pigs[j]->getPhysicsBody()->setEnabled(true);
+				pigs[j]->state = Bird::HIT;
 			}
 		}
 	}
@@ -384,7 +416,7 @@ void HelloWorld::DrawWorld()
 	//Create Gravity Radius
 	planetG = Sprite::create("UA/Level/circ.png");
 	planetG->setPosition(1200, 500);
-	planetG->setScale(2.6f);
+	planetG->setScale(2.8f);
 	planetG->setAnchorPoint(Vec2(0.5f, 0.5f));
 	this->addChild(planetG, -1);
 
