@@ -91,6 +91,8 @@ bool HelloWorld::init()
 	birds[2]->initialize();
 	this->addChild(birds[2]);
 
+	birdCount = birds.size();
+
 	//Create the Pigs
 
 	Bird* pig = Bird::create("UA/Enemies/spr_Pig.png");
@@ -121,10 +123,7 @@ bool HelloWorld::init()
 	pigs[3]->initialize();
 	this->addChild(pigs[3]);
 
-	/*printAngle = Label::createWithTTF(std::to_string(birdAngle), "Fonts/arial.ttf", 20.0f);
-	printAngle->setAnchorPoint(Vec2(0.0f, 1.0f));
-	printAngle->setPosition(0.0f, DISPLAY->getWindowSize().height);
-	this->addChild(printAngle);*/
+	pigCount = pigs.size();
 
 	//Allow for the update() function to be called by cocos
 	this->scheduleUpdate();
@@ -134,24 +133,39 @@ bool HelloWorld::init()
 
 void HelloWorld::update(float deltaTime)
 {
+	if (birdCount <= 0 || pigCount <= 0) {
+		gameOver = Label::createWithTTF("GAME OVER", "Fonts/arial.ttf", 200.0f);
+		gameOver->setAnchorPoint(Vec2(0.5f, 0.5f));
+		gameOver->setPosition(DISPLAY->getWindowSizeAsVec2().x / 2.0f, DISPLAY->getWindowSizeAsVec2().y / 2.0f);
+		this->addChild(gameOver);
+	}
+
 	cursor->setPosition(INPUTS->getMousePosition());
 
 	for (int i = 0; i < birds.size(); i++) {
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
 		}
-		if (birds[i]->state == Bird::HIT) {
+		if (birds[i]->state == Bird::HIT || birds[i]->lastState == Bird::HIT) {
 			if (birds[i]->deathTime < 0) {
-				birds[i]->deathTime = currentTime() + 5000;
+				birds[i]->deathTime = currentTime() + 8000;
 			}
 			if (birds[i]->deathTime > 0 && currentTime() >= birds[i]->deathTime) {
 				birds[i]->state = Bird::DEAD;
 			}
 		}
 		if (birds[i]->state == Bird::DEAD) {
+			birdCount--;
 			if (birds[i] == currentBird) {
 				currentBird = NULL;
 			}
+			explosion = ParticleExplosion::createWithTotalParticles(200);
+			explosion->setEndColorVar(Color4F(1.0f, 1.0f, 1.0f, 1.0f));
+			explosion->setPosition(birds[i]->getPosition());
+			explosion->setTexture(director->getTextureCache()->addImage("UA/Level/poof.png"));
+			explosion->setLife(2.0f);
+			this->addChild(explosion);
+
 			this->removeChild(birds[i]);
 			birds.erase(birds.begin() + i);
 			i--;
@@ -168,6 +182,14 @@ void HelloWorld::update(float deltaTime)
 			}
 		}
 		if (pigs[i]->state == Bird::DEAD) {
+			pigCount--;
+			explosion = ParticleExplosion::createWithTotalParticles(140);
+			explosion->setEndColorVar(Color4F(1.0f, 1.0f, 1.0f, 1.0f));
+			explosion->setPosition(pigs[i]->getPosition());
+			explosion->setTexture(director->getTextureCache()->addImage("UA/Level/poof.png"));
+			explosion->setLife(1.0f);
+			this->addChild(explosion);
+
 			this->removeChild(pigs[i]);
 			pigs.erase(pigs.begin() + i);
 			i--;
@@ -195,7 +217,6 @@ void HelloWorld::update(float deltaTime)
 			}
 		}
 	}
-
 
 	//Check for Keyboard & Mouse Input DO NOT REMOVE
 	updateInputs();
@@ -235,7 +256,6 @@ void HelloWorld::updateMouseInputs()
 			else {
 				currentBird->setPosition(INPUTS->getMousePosition());
 			}
-			//printAngle->setString(std::to_string(birdAngle));
 		}
 		else if (currentBird != NULL && (currentBird->state == Bird::LAUNCHED || currentBird->state == Bird::HIT)) {
 			if (currentBird->type == Bird::YELLOW) {

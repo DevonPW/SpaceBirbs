@@ -188,6 +188,11 @@ private:
 
 	Sprite* cursor;
 
+	ParticleSystem* explosion;
+
+	int birdCount;
+	int pigCount;
+
 	//Birds
 	Bird* currentBird = 0;
 	//Bird* birds[3];
@@ -209,7 +214,7 @@ private:
 	Sprite* planetBig;
 	Sprite* planetG;
 
-	Label* printAngle;
+	Label* gameOver;
 
 	//This scene's physics world
 	//Reference to the physics world used within the scene. Prevents having to call: director->getRunningScene()->getPhysicsWorld() every time we want to do something
