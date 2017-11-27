@@ -125,7 +125,6 @@ public:
 	}
 
 	int deathTime = -1;
-	int toDead = 0;
 
 	static Bird* create(const std::string& filename)
 	{
@@ -199,8 +198,8 @@ private:
 	Sprite* slingshotFront;
 
 	//Pigs
-	Bird* pigs[4];
-	Sprite* pig1;
+	//Bird* pigs[4];
+	vector<Bird*> pigs;
 	
 	//Background
 	Sprite* background;

@@ -93,25 +93,29 @@ bool HelloWorld::init()
 
 	//Create the Pigs
 
-	pigs[0] = Bird::create("UA/Enemies/spr_Pig.png");
+	Bird* pig = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs.push_back(pig);
 	pigs[0]->startPos = (planetBig->getPosition() + Vec2(148, 148));
 	pigs[0]->type = Bird::PIG;
 	pigs[0]->initialize();
 	this->addChild(pigs[0]);
 
-	pigs[1] = Bird::create("UA/Enemies/spr_Pig.png");
+	pig = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs.push_back(pig);
 	pigs[1]->startPos = (planetBig->getPosition() + Vec2(-148, 148));
 	pigs[1]->type = Bird::PIG;
 	pigs[1]->initialize();
 	this->addChild(pigs[1]);
 
-	pigs[2] = Bird::create("UA/Enemies/spr_Pig.png");
+	pig = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs.push_back(pig);
 	pigs[2]->startPos = (planetBig->getPosition() + Vec2(-148, -148));
 	pigs[2]->type = Bird::PIG;
 	pigs[2]->initialize();
 	this->addChild(pigs[2]);
 
-	pigs[3] = Bird::create("UA/Enemies/spr_Pig.png");
+	pig = Bird::create("UA/Enemies/spr_Pig.png");
+	pigs.push_back(pig);
 	pigs[3]->startPos = (planetBig->getPosition() + Vec2(148, -148));
 	pigs[3]->type = Bird::PIG;
 	pigs[3]->initialize();
@@ -132,13 +136,13 @@ void HelloWorld::update(float deltaTime)
 {
 	cursor->setPosition(INPUTS->getMousePosition());
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < birds.size(); i++) {
 		if (birds[i]->state == Bird::WAITING) {
 			birds[i]->orbit(planetSmall);
 		}
 		if (birds[i]->state == Bird::HIT) {
 			if (birds[i]->deathTime < 0) {
-				birds[i]->deathTime = currentTime() + 10000;
+				birds[i]->deathTime = currentTime() + 5000;
 			}
 			if (birds[i]->deathTime > 0 && currentTime() >= birds[i]->deathTime) {
 				birds[i]->state = Bird::DEAD;
@@ -149,20 +153,24 @@ void HelloWorld::update(float deltaTime)
 				currentBird = NULL;
 			}
 			this->removeChild(birds[i]);
+			birds.erase(birds.begin() + i);
+			i--;
 		}
 	}
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < pigs.size(); i++) {
 		if (pigs[i]->state == Bird::HIT) {
 			if (pigs[i]->deathTime < 0) {
-				pigs[i]->deathTime = currentTime() + 10000;
+				pigs[i]->deathTime = currentTime() + 5000;
 			}
 			if (pigs[i]->deathTime > 0 && currentTime() >= pigs[i]->deathTime) {
 				pigs[i]->state = Bird::DEAD;
 			}
-			if (pigs[i]->state == Bird::DEAD) {
-				this->removeChild(pigs[i]);
-			}
+		}
+		if (pigs[i]->state == Bird::DEAD) {
+			this->removeChild(pigs[i]);
+			pigs.erase(pigs.begin() + i);
+			i--;
 		}
 	}
 	
@@ -258,7 +266,7 @@ void HelloWorld::updateMouseInputs()
 			currentBird->state = Bird::LAUNCHED;
 		}
 		else {
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < birds.size(); i++) {
 				if (INPUTS->getMousePosition().distance(birds[i]->getPosition()) <= birds[i]->getContentSize().width / 2.0f * birds[i]->getScale()) {
 					if (birds[i]->state == Bird::WAITING) {
 						if (currentBird != NULL && currentBird->state == Bird::LOADED) {
@@ -308,7 +316,7 @@ void HelloWorld::updateKeyboardInputs()
 
 void HelloWorld::CheckCollision()
 {
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < birds.size(); i++) {
 		if (birds[i]->checkCollision(planetG) == true) {
 			birds[i]->orbit(planetBig, 0.0f, planetG->getContentSize().width / 2.0f * planetG->getScale());
 		}
@@ -340,7 +348,7 @@ void HelloWorld::CheckCollision()
 			birds[i]->setPosition(Vec2(birds[i]->getPositionX(), DISPLAY->getWindowSizeAsVec2().y + 200));
 		}
 		//collisions with pigs
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < pigs.size(); j++) {
 			if (pigs[j]->getPhysicsBody()->isEnabled() == false && birds[i]->checkCollision(pigs[j]) == true) {
 				pigs[j]->getPhysicsBody()->setEnabled(true);
 				pigs[j]->state = Bird::HIT;
@@ -348,7 +356,7 @@ void HelloWorld::CheckCollision()
 		}
 	}
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < pigs.size(); i++) {
 		if (pigs[i]->checkCollision(planetG) == true) {
 			pigs[i]->orbit(planetBig, 0.0f, planetG->getContentSize().width / 2.0f * planetG->getScale());
 		}
@@ -375,7 +383,7 @@ void HelloWorld::CheckCollision()
 		}
 
 		//collisions with pigs
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < pigs.size(); j++) {
 			if (pigs[j]->getPhysicsBody()->isEnabled() == false && pigs[i] != pigs[j] && pigs[i]->checkCollision(pigs[j]) == true) {
 				pigs[j]->getPhysicsBody()->setEnabled(true);
 				pigs[j]->state = Bird::HIT;
