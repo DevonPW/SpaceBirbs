@@ -5,6 +5,7 @@
 #include <fstream>
 #include <ui\UITextField.h>
 #include <vector>
+#include <ctime>
 
 using std::vector;
 using namespace cocos2d;
@@ -49,12 +50,12 @@ public:
 		
 		bird_body->setGravityEnable(false);
 		if (type == PIG) {
-			bird_body->setMass(100);
+			bird_body->setMass(300.0f);
 			bird_body->setDynamic(true);
 			bird_body->setEnabled(false);
 		}
 		else {
-			bird_body->setMass(100);
+			bird_body->setMass(100.0f);
 			bird_body->setDynamic(true);
 			bird_body->setEnabled(false);
 		}
@@ -111,7 +112,7 @@ public:
 				setRotation(getRotation() + 15);
 			}
 
-			Vec2 forceVector = birdDisplacement.getNormalized() * -40000.0f;
+			Vec2 forceVector = birdDisplacement.getNormalized() * -42000.0f;
 
 			/*if (state == LAUNCHED || state == HIT) {
 				forceVector *= (birdDisplacement.getLength()) / radius;
@@ -125,6 +126,10 @@ public:
 	}
 
 	int deathTime = -1;
+
+	int lifeTime = -1;
+
+	bool addMass = false;
 
 	static Bird* create(const std::string& filename)
 	{
