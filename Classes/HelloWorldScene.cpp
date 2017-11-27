@@ -157,7 +157,7 @@ void HelloWorld::update(float deltaTime)
 		}
 		if (birds[i]->state == Bird::HIT || birds[i]->lastState == Bird::HIT) {
 			if (birds[i]->deathTime < 0) {
-				birds[i]->deathTime = currentTime() + 8000;
+				birds[i]->deathTime = currentTime() + 10000;
 			}
 			if (birds[i]->deathTime > 0 && currentTime() >= birds[i]->deathTime) {
 				birds[i]->state = Bird::DEAD;
@@ -168,11 +168,11 @@ void HelloWorld::update(float deltaTime)
 			if (birds[i] == currentBird) {
 				currentBird = NULL;
 			}
-			explosion = ParticleExplosion::createWithTotalParticles(200);
+			explosion = ParticleExplosion::createWithTotalParticles(130);
 			explosion->setEndColorVar(Color4F(1.0f, 1.0f, 1.0f, 1.0f));
 			explosion->setPosition(birds[i]->getPosition());
 			explosion->setTexture(director->getTextureCache()->addImage("UA/Level/poof.png"));
-			explosion->setLife(2.0f);
+			explosion->setLife(1.2f);
 			this->addChild(explosion);
 
 			this->removeChild(birds[i]);
@@ -192,11 +192,11 @@ void HelloWorld::update(float deltaTime)
 		}
 		if (pigs[i]->state == Bird::DEAD) {
 			pigCount--;
-			explosion = ParticleExplosion::createWithTotalParticles(140);
+			explosion = ParticleExplosion::createWithTotalParticles(130);
 			explosion->setEndColorVar(Color4F(1.0f, 1.0f, 1.0f, 1.0f));
 			explosion->setPosition(pigs[i]->getPosition());
 			explosion->setTexture(director->getTextureCache()->addImage("UA/Level/poof.png"));
-			explosion->setLife(1.0f);
+			explosion->setLife(1.2f);
 			this->addChild(explosion);
 
 			this->removeChild(pigs[i]);
@@ -293,7 +293,7 @@ void HelloWorld::updateMouseInputs()
 			shotForce = shotForce.rotateByAngle(slingshotBack->getPosition() - currentBird->getPosition(), CC_DEGREES_TO_RADIANS(rot));
 			currentBird->getPhysicsBody()->applyImpulse(shotForce);
 			currentBird->state = Bird::LAUNCHED;
-			currentBird->lifeTime = currentTime() + 100000;
+			currentBird->lifeTime = currentTime() + 120000;
 		}
 		else {
 			for (int i = 0; i < birds.size(); i++) {
